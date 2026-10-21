@@ -449,6 +449,10 @@ function cuState(now,cur,nxt,occ){
   const same=nxt&&nxt.s.toDateString()===now.toDateString();
   const heads=!!(cur&&same&&(cur.e-now)<=300000);
   const sj=heads?nxt:(cur||nxt);
+  // the line after the class being shown: the next class while in one, otherwise the class after the upcoming one
+  let fol=null,folLab='Next';
+  if(cur&&!heads)fol=nxt;
+  else if(sj){const L=occ||[],i=L.findIndex(o=>o.s.getTime()===sj.s.getTime()&&o.subject===sj.subject);fol=i>=0?L[i+1]||null:null;folLab='Then'}
   const secs=Math.max(0,Math.floor(((cur?cur.e:nxt?nxt.s:now)-now)/1000));
   const dd=Math.floor(secs/86400),hh=Math.floor(secs%86400/3600),mm=Math.floor(secs%3600/60);
   const units=(dd?[[dd,'days'],[hh,'hr'],[mm,'min']]:hh?[[hh,'hr'],[mm,'min'],[secs%60,'sec']]:[[mm,'min'],[secs%60,'sec']]).map(([v,l])=>[pad(v),l]);
@@ -467,7 +471,7 @@ function cuState(now,cur,nxt,occ){
     frac:cur?Math.min(1,(now-cur.s)/(cur.e-cur.s)):0,left:cur?Math.max(0,(cur.e-now)/(cur.e-cur.s)):0,cur:!!cur,
     units,tl,
     agenda:(occ||[]).filter(o=>o.e>now).slice(0,4).map(o=>[o.s<=now?fmt(o.e-now)+' left':(o.s.toDateString()===now.toDateString()?'':DAYS[o.s.getDay()]+' ')+o.start,o.subject,roomOf(o)||'—']),
-    next:cur&&nxt&&!heads?`Next: ${nxt.subject} · ${roomOf(nxt)||'room not set'} · ${nxt.start}`:''
+    next:fol?`${folLab}: ${fol.subject} · ${roomOf(fol)||'room not set'} · ${(fol.s.toDateString()===now.toDateString()?'':DAYS[fol.s.getDay()]+' ')+fol.start}`:''
   };
 }
 function cuApply(el,preview){
